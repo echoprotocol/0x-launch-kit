@@ -1,0 +1,33 @@
+version: "3"
+services:
+  frontend:
+    image: echoprotocol/launch-kit-frontend
+    environment:
+      REACT_APP_RELAYER_URL: 'http://localhost:3000/v2'
+      REACT_APP_DEFAULT_BASE_PATH: '/erc20'
+      REACT_APP_THEME_NAME: 'LIGHT_THEME'
+      REACT_APP_NETWORK_ID: 4
+      
+    command: yarn build
+    volumes:
+        - frontend-assets:/app/build
+  backend:
+    image: echoprotocol/launch-kit-backend
+    environment:
+        HTTP_PORT: '3000'
+        RPC_URL: 'wss://devnet.echo-dev.io/ws'
+        NETWORK_ID: '4'
+        WHITELIST_ALL_TOKENS: 'true'
+        FEE_RECIPIENT: '0x0000000000000000000000000000000000000000'
+        MAKER_FEE_ZRX_UNIT_AMOUNT: '0'
+        TAKER_FEE_ZRX_UNIT_AMOUNT: '0'
+    ports:
+      - '3000:3000'
+  nginx:
+    image: nginx
+    ports:
+        - '3001:80'
+    volumes:
+        - frontend-assets:/usr/share/nginx/html
+volumes:
+    frontend-assets:

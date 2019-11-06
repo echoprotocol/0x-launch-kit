@@ -53,16 +53,8 @@ const zeroExAsciiArt = `
 
 function getRpcUrl(network: Network): string {
     switch (network) {
-        case 'mainnet':
-            return 'https://mainnet.infura.io/';
-        case 'kovan':
-            return 'https://kovan.infura.io/';
-        case 'ropsten':
-            return 'https://ropsten.infura.io/';
-        case 'ganache':
-            return 'http://ganache:8545/';
-        case 'custom':
-            return 'http://localhost:8545/';
+        case 'devnet':
+            return 'wss://devnet.echo-dev.io/ws';
     }
 }
 
@@ -71,25 +63,9 @@ const isAddress = (s: string) => /(0x)?[0-9a-fA-F]{40}/.test(s);
 async function main() {
     const networkChoices: Array<{ name: string; value: Network }> = [
         {
-            name: 'Mainnet',
-            value: 'mainnet',
-        },
-        {
-            name: 'Kovan',
-            value: 'kovan',
-        },
-        {
-            name: 'Ropsten',
-            value: 'ropsten',
-        },
-        {
-            name: 'Ganache',
-            value: 'ganache',
-        },
-        {
-            name: 'Custom',
-            value: 'custom',
-        },
+            name: 'Devnet',
+            value: 'devnet',
+        }
     ];
 
     const answers = await inquirer.prompt<any>([
@@ -115,13 +91,13 @@ async function main() {
         },
         {
             type: 'input',
-            name: 'rpcUrl',
-            message: 'Select the RPC URL you want to use',
+            name: 'wsUrl',
+            message: 'Select the WS URL you want to use',
             default: (answers: any) => {
                 return getRpcUrl(answers.network);
             },
-            validate: (rpcUrl: string) => {
-                return /https?:\/\/.+/.test(rpcUrl) ? true : 'Please enter a valid URL';
+            validate: (wsUrl: string) => {
+                return /wss?:\/\/.+/.test(wsUrl) ? true : 'Please enter a valid URL';
             },
             when: (answers: any) => answers.network !== 'ganache',
         },
@@ -220,12 +196,10 @@ async function main() {
             `\n\n\n\n\n`,
     );
 
-    const rpcUrl = answers.network === 'ganache' ? 'http://ganache:8545' : answers.rpcUrl;
-
     const options: BuildOptions = {
         tokenType: answers.tokenType,
         network: answers.network,
-        rpcUrl,
+        wsUrl: answers.wsUrl,
         relayerUrl: answers.relayerUrl,
         feeRecipient: answers.feeRecipient || ZERO_ADDRESS,
         theme: answers.theme,
@@ -238,6 +212,7 @@ async function main() {
     };
 
     const dockerComposeYml = buildDockerComposeYml(options);
+    console.log('TCL: main -> options', options);
 
     const composeFilePath = process.argv[2] || 'docker-compose.yml';
 
